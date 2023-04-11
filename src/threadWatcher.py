@@ -93,3 +93,47 @@ class ThreadWatcher:
 
 		dict_config["watched"][board][thread_id] = last_post_id
 		self.save_config(dict_config)
+
+	def update_thread(self, board, thread_dict):
+		old = [*thread_dict.values()][0]
+		new = self.get_thread(board, [*thread_dict.keys()][0])
+
+		#test which is longer, higher deletion rate could result in older version being longer
+		if len(new) > len(old):
+			count = len(old)
+		else:
+			count = len(new)
+
+		count_old = 0
+		count_new = 0
+
+		deleted_posts = []
+
+		new_list = []
+		for i in range(len(new)):
+			new_list.append(new[i].no)
+
+		#iterate through both lists and record discrepancies
+		for x in range(count):
+			print(x)
+
+			#keep iterating while appending old deleted posts until list items match again
+			while True:
+				if str(old[count_old]) == str(new[count_new].no):
+					print("Match:",str(old[count_old]),str(new[count_new].no), len(old), len(new), count_old, count_new)
+					count_new += 1
+					count_old += 1
+					break
+				else:
+					print("NoMat:",str(old[count_old]),str(new[count_new].no), len(old), len(new), count_old, count_new)
+					deleted_posts.append(old[count_old])
+					#Checks to see if incrementating will cause out of bounds error 
+					if count_old + 1 == len(old):
+						break
+					else:
+						count_old += 1
+			
+		if len(new) > count_new:
+			new = new[count_new:]
+
+		return(old, new, deleted_posts)
