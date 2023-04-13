@@ -37,13 +37,14 @@ class ThreadWatcher:
 
 		return posts
 
-	def format_comment(self, comment, matched_terms=""):
+	def format_comment(self, comment, in_terminal=False, matched_terms=""):
 		comment = re.sub(r'<br>+', '\n', comment)                                                                   #Replace br tags with newlines to maintain original readability
 		comment = html.unescape(re.sub(r'<.*?>', '', comment))                                                      #Unescapes escaped special characters and removes HTML tags
-		comment = re.sub(r'>{1}[\S ]*', r"{}\g<0>{}".format(GREEN, RESET), comment)                                 #Matches greentext and colours it green                                                    
-		comment = re.sub(r'>>[\d]{8}', r"{}\g<0>{}".format(CYAN, RESET), comment)                                   #Matches reply and colours it cyan
-		if matched_terms != "":
-			comment = re.sub(r'|'.join(matched_terms), r"{}\g<0>{}".format(MAGENTA, RESET), comment)                #Matches found term and colours it magenta
+		if in_terminal == True:
+			comment = re.sub(r'>{1}[\S ]*', r"{}\g<0>{}".format(GREEN, RESET), comment)                                 #Matches greentext and colours it green                                                    
+			comment = re.sub(r'>>[\d]{8}', r"{}\g<0>{}".format(CYAN, RESET), comment)                                   #Matches reply and colours it cyan
+			if matched_terms != "":
+				comment = re.sub(r'|'.join(matched_terms), r"{}\g<0>{}".format(MAGENTA, RESET), comment)                #Matches found term and colours it magenta
 		return comment
 
 	def download(self, board, post, path):
@@ -137,3 +138,23 @@ class ThreadWatcher:
 			new = new[count_new:]
 
 		return(old, new, deleted_posts)
+
+	def search_matched(self, thread_dict):
+		matched_posts = {}
+		for board in thread_dict["terms"]:
+			catalog_threads = self.get_catalog(board)
+			for thread in catalog_threads: 															#search through catalog
+				op_terms = list(thread_dict["terms"][board].keys())									#use board terms as keys (typically thread general acronym in intended use case)
+				if thread.sub != None:
+					op_matches = re.findall(r'|'.join(op_terms), thread.sub, re.IGNORECASE)
+					if op_matches:
+						matched_posts[thread.no] = {"board":board, "sub":thread.sub, "posts":[]}
+						post_terms = thread_dict["terms"][board][op_matches[0]]["sub_terms"] 		#prone to breaking if more than 1 matching term in sub
+						if post_terms[0] != "":														#Matches everything if left as a null string
+							for post in self.get_thread(board,thread.no):							#search through thread
+								if post.com != None and post.no != thread.no:
+									post_matches = re.findall(r'|'.join(post_terms), post.com, re.IGNORECASE)
+									if post_matches:
+										matched_posts[thread.no]["posts"].append({post.no:self.format_comment(post.com)})
+
+		return matched_posts
