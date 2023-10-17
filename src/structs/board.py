@@ -1,5 +1,10 @@
+import requests
+import structs.thread
+
+BASE_URL = "https://a.4cdn.org"
+
 class Board:
-    def __init__(self, json):
+    def __init__(self, board: str):
         self.board = None               #string      always              The directory the board is located in.                                         Any string
         self.title = None               #string      always              The readable title at the top of the board.                                    Any string
         self.ws_board = None            #integer     always              Is the board worksafe                                                          1 or 0
@@ -30,4 +35,26 @@ class Board:
         self.min_image_width = None     #integer     only if enabled     What is the minimum image width (in pixels)                                    Any positive integer
         self.min_image_height = None    #integer     only if enabled     What is the minimum image height (in pixels)                                   Any positive integer
 
-        self.__dict__.update(json)
+        boards = requests.get(f"{BASE_URL}/boards.json").json()["boards"]
+        for b in boards:
+            if b["board"] == board:
+                self.__dict__.update(b)
+
+        self.threads = []
+        self.threads_old = []
+        self.threads_new = []
+        self.threads_deleted = []
+
+    def get_threads(self):
+        response = requests.get(f"{BASE_URL}/{self.board}/catalog.json").json()
+        self.threads.clear()
+        for page in response:
+            for thread in page["threads"]:
+                self.threads.append(structs.thread.Thread(thread))
+        
+        # self.threads = 
+
+        return self.threads
+
+    def update(self):
+        pass

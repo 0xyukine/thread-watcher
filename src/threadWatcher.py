@@ -20,14 +20,17 @@ class ThreadWatcher:
 	def __init__(self):
 		self.session = requests.Session()
 
-	def get_catalog(self, board):
-		threads = []
-		response = methods.getmethods.get_catalog(self.session, board).json()
-		for page in response:
-			for thread in page["threads"]:
-				threads.append(structs.thread.Thread(thread))
+	# def get_catalog(self, board):
+	# 	threads = []
+	# 	response = methods.getmethods.get_catalog(self.session, board).json()
+	# 	for page in response:
+	# 		for thread in page["threads"]:
+	# 			threads.append(structs.thread.Thread(thread))
 
-		return threads
+	# 	return threads
+
+	def get_catalog(self, board):
+		return structs.board.Board(board)
 
 	def get_thread(self, board, thread_id):
 		posts = []

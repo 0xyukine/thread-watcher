@@ -42,6 +42,12 @@ class Thread:
 
         self.__dict__.update(json)
 
+    def __str__(self):
+        return str(self.no)
+    
+    def __repr__(self):
+        return self.__str__()
+
     def print(self):
         for key, value in self.__dict__.items():
             if type(value) == str and len(value) > 100:
