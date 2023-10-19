@@ -1,5 +1,10 @@
+import requests
+import structs.post
+
+BASE_URL = "https://a.4cdn.org"
+
 class Thread:
-    def __init__(self, json):
+    def __init__(self, json, board: str):
         self.no = None              #integer     always                                              The numeric post ID                                                                     any positive integer
         self.resto = None           #integer     always                                              For replies: this is the ID of the thread being replied to. For OP: this value is zero  0 or Any positive integer
         self.sticky = None          #integer     OP only, if thread is currently stickied            If the thread is being pinned to the top of the page                                    1 or not set
@@ -40,7 +45,15 @@ class Thread:
         self.m_img = None           #integer     any post that has a mobile-optimized image          Mobile optimized image exists for post                                                  1 or not set
         self.last_replies = None    #array       catalog OP only                                     JSON representation of the most recent replies to a thread                              array of JSON post objects
 
+        self.board = board
+
         self.__dict__.update(json)
+
+        self.posts = []
+        self.posts_old = []
+        self.posts_new = []
+
+        print(f"Initialised thread {self.no} - {self.sub}")
 
     def __str__(self):
         return str(self.no)
@@ -54,3 +67,22 @@ class Thread:
                 print("{} {}...{}".format(key, value[:50], value[-50:]))
             else:
                 print(key, value)
+
+    def get_posts(self):
+        response = requests.get(f"{BASE_URL}/{self.board}/thread/{self.no}.json").json()
+        self.posts.clear()
+        for post in response["posts"]:
+            self.posts.append(structs.post.Post(post))
+        
+        return self.posts
+    
+    def update(self):
+        print(f"Updating thread {self.no} - {self.sub}")
+        self.get_posts()
+        #self.posts_new = [x for x in self.posts if x not in self.posts_old]
+        self.posts_new.clear()
+        # for x in self.posts:
+        #     if x.no not in [y.no for y in self.posts_old]:
+        #         self.posts_new.append(x)
+        self.posts_new = [x for x in self.posts if x.no not in [y.no for y in self.posts_old]]
+        self.posts_old = self.posts[:]

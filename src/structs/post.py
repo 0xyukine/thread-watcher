@@ -41,3 +41,9 @@ class Post:
         self.archived_on = None      #integer     OP only, if thread has been archived                UNIX timestamp the post was archived                                                   UNIX timestamp
 
         self.__dict__.update(json)
+    
+    def __str__(self):
+        return str(self.no)
+    
+    def __repr__(self):
+        return self.__str__()

@@ -43,18 +43,22 @@ class Board:
         self.threads = []
         self.threads_old = []
         self.threads_new = []
-        self.threads_deleted = []
+        self.threads_bump_order = []
+    
+        self.update()
 
     def get_threads(self):
         response = requests.get(f"{BASE_URL}/{self.board}/catalog.json").json()
         self.threads.clear()
         for page in response:
             for thread in page["threads"]:
-                self.threads.append(structs.thread.Thread(thread))
-        
-        # self.threads = 
+                self.threads.append(structs.thread.Thread(thread, self.board))
 
         return self.threads
 
     def update(self):
-        pass
+        self.threads = self.get_threads()
+        self.threads_bump_order = self.threads
+        self.threads = sorted(self.threads, key=lambda x: x.no)                         #numerical order - creation date ascending
+        self.threads_new = [item for item in self.threads if item not in self.threads_old]
+        self.threads_old = self.threads
