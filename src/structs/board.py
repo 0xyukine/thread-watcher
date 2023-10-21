@@ -1,7 +1,9 @@
+import re
 import requests
 import structs.thread
 
 BASE_URL = "https://a.4cdn.org"
+VALID_FIELDS = {"all","sub","com"}
 
 class Board:
     def __init__(self, board: str):
@@ -62,3 +64,30 @@ class Board:
         self.threads = sorted(self.threads, key=lambda x: x.no)                         #numerical order - creation date ascending
         self.threads_new = [item for item in self.threads if item not in self.threads_old]
         self.threads_old = self.threads
+    
+    def index(self, thread_no: int):
+        pass
+
+    def search(self, term, field="all"):
+        matches = []
+        field = field.lower()
+        if field not in VALID_FIELDS:
+            raise ValueError(f"Fields must be one of {VALID_FIELDS}")
+        
+        if not self.threads:
+            raise ValueError("Thread list empty, update before searching")
+
+        if type(term) == list:
+            term = "|".join(term)
+        ex = re.compile(term, re.IGNORECASE)    
+
+        if field == "all":
+            for thread in self.threads:
+                if (thread.sub != None and re.search(ex,thread.sub)) or (thread.com != None and re.search(ex,thread.com)):
+                    matches.append(thread)
+        else:
+            for thread in self.threads:
+                if getattr(thread,field) != None and re.search(ex, getattr(thread,field)):
+                    matches.append(thread)
+        
+        return matches

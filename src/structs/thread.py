@@ -79,10 +79,6 @@ class Thread:
     def update(self):
         print(f"Updating thread {self.no} - {self.sub}")
         self.get_posts()
-        #self.posts_new = [x for x in self.posts if x not in self.posts_old]
         self.posts_new.clear()
-        # for x in self.posts:
-        #     if x.no not in [y.no for y in self.posts_old]:
-        #         self.posts_new.append(x)
         self.posts_new = [x for x in self.posts if x.no not in [y.no for y in self.posts_old]]
         self.posts_old = self.posts[:]
