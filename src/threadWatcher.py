@@ -50,6 +50,7 @@ class ThreadWatcher:
 				comment = re.sub(r'|'.join(matched_terms), r"{}\g<0>{}".format(MAGENTA, RESET), comment)                #Matches found term and colours it magenta
 		return comment
 
+	#\[sound=(.*)]
 	def download(self, board, post, path):
 		img = methods.getmethods.get_img_url(self.session, board, post)
 		filename = f"{path}/{post.filename}{post.ext}"

@@ -1,10 +1,11 @@
 import requests
 import structs.post
+import structs.board
 
 BASE_URL = "https://a.4cdn.org"
 
-class Thread:
-    def __init__(self, json, board: str):
+class Thread():
+    def __init__(self, json, board: str, watched_threads):
         self.no = None              #integer     always                                              The numeric post ID                                                                     any positive integer
         self.resto = None           #integer     always                                              For replies: this is the ID of the thread being replied to. For OP: this value is zero  0 or Any positive integer
         self.sticky = None          #integer     OP only, if thread is currently stickied            If the thread is being pinned to the top of the page                                    1 or not set
@@ -46,6 +47,7 @@ class Thread:
         self.last_replies = None    #array       catalog OP only                                     JSON representation of the most recent replies to a thread                              array of JSON post objects
 
         self.board = board
+        self.parent_watched_threads = watched_threads
 
         self.__dict__.update(json)
 
@@ -67,6 +69,9 @@ class Thread:
                 print("{} {}...{}".format(key, value[:50], value[-50:]))
             else:
                 print(key, value)
+
+    def watch(self):
+        self.parent_watched_threads.append(self)
 
     def get_posts(self):
         response = requests.get(f"{BASE_URL}/{self.board}/thread/{self.no}.json").json()

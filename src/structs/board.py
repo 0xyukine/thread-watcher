@@ -47,6 +47,8 @@ class Board:
         self.threads_new = []
         self.threads_bump_order = []
     
+        self.watched_threads = []
+
         self.update()
 
     def get_threads(self):
@@ -54,9 +56,17 @@ class Board:
         self.threads.clear()
         for page in response:
             for thread in page["threads"]:
-                self.threads.append(structs.thread.Thread(thread, self.board))
+                self.threads.append(structs.thread.Thread(thread, self.board, self.watched_threads))
 
         return self.threads
+
+    def watch_thread(self, thread):
+        if not isinstance(thread, structs.thread.Thread):
+            raise TypeError(f"Object of type {type(thread)} supplied, expected thread {type(structs.thread.Thread)}")
+        if thread.no in [x.no for x in self.watched_threads]:
+            raise ValueError("Thread already in watched list")
+        
+        self.watched_threads.append(thread)
 
     def update(self):
         self.threads = self.get_threads()
@@ -64,9 +74,14 @@ class Board:
         self.threads = sorted(self.threads, key=lambda x: x.no)                         #numerical order - creation date ascending
         self.threads_new = [item for item in self.threads if item not in self.threads_old]
         self.threads_old = self.threads
+
+    def update_watched(self):
+        pass
     
     def index(self, thread_no: int):
-        pass
+        for thread in self.threads:
+            if thread.no == thread_no:
+                return thread
 
     def search(self, term, field="all"):
         matches = []
