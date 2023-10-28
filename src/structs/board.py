@@ -75,8 +75,14 @@ class Board:
         self.threads_new = [item for item in self.threads if item not in self.threads_old]
         self.threads_old = self.threads
 
+        return self.threads_new
+
     def update_watched(self):
-        pass
+        thread_dict = {}
+        for thread in self.watched_threads:
+            thread_dict[thread.no] = thread.update()
+        
+        return thread_dict
     
     def index(self, thread_no: int):
         for thread in self.threads:

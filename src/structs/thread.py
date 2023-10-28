@@ -87,3 +87,5 @@ class Thread():
         self.posts_new.clear()
         self.posts_new = [x for x in self.posts if x.no not in [y.no for y in self.posts_old]]
         self.posts_old = self.posts[:]
+
+        return self.posts_new

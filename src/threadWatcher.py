@@ -19,6 +19,7 @@ RESET = "\u001b[0m"
 class ThreadWatcher:
 	def __init__(self):
 		self.session = requests.Session()
+		self.boards = []
 
 	# def get_catalog(self, board):
 	# 	threads = []
@@ -29,8 +30,21 @@ class ThreadWatcher:
 
 	# 	return threads
 
+	def update_watched(self):
+		board_dict = {}
+		for board in self.boards:
+			board_dict[board.board] = board.update_watched()
+		
+		return board_dict
+
 	def get_catalog(self, board):
-		return structs.board.Board(board)
+		for b in self.boards:
+			if b.board == board:
+				return b
+
+		b = structs.board.Board(board)
+		self.boards.append(b)
+		return b
 
 	def get_thread(self, board, thread_id):
 		posts = []
