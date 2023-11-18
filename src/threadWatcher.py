@@ -37,6 +37,14 @@ class ThreadWatcher:
 		
 		return board_dict
 
+	def auto_watch(self):
+		d = self.load_config()["thread_watcher"]
+		for board in d.keys():
+			for scope in d[board]["catalog"].keys():
+				for term in d[board]["catalog"][scope]:
+					for thread in self.get_catalog(board).search(term,scope):
+						self.get_catalog(board).watch_thread(thread)
+
 	def get_catalog(self, board):
 		for b in self.boards:
 			if b.board == board:
@@ -72,18 +80,14 @@ class ThreadWatcher:
 		with open(filename, 'wb') as handler:
 			handler.write(img)
 
-	def create_config(self, dict_config=""):
-		if dict_config == "":
-			dict_config = {"terms":{},"watched":{}}
-		else:
-			self.check_config(dict_config)
-		self.save_config(dict_config)
+	# def create_config(self, dict_config=""):
+	# 	dict_config = {"thread_watcher":{}}
+	# 	self.save_config(dict_config)
+	# 	return dict_config
 
-		return dict_config
-
-	def save_config(self, dict_config):
+	def save_config(self, dict_config={}):
 		with open('./config.json', 'w') as file:
-			json.dump(dict_config, file, indent=4)
+			json.dump({"thread_watcher":dict_config}, file, indent=4)
 
 	def load_config(self):
 		with open('./config.json', 'r') as file:
@@ -91,88 +95,108 @@ class ThreadWatcher:
 		return dict_config
 
 	def check_config(self, dict_config):
-		if dict_config.keys() != ["terms", "watched"]:
-			return False
-		else:
+		if "thread_watcher" in dict_config.keys():
 			return True
-
-	def add_term(self, dict_config, board, term, sub_terms=[""]):
-		if not board in dict_config["terms"].keys():
-			dict_config["terms"][board] = {}
-
-		if term in dict_config["terms"][board].keys():
-			dict_config["terms"][board][term]["sub_terms"] = list(set(dict_config["terms"][board][term]["sub_terms"] + sub_terms))
 		else:
-			dict_config["terms"][board][term] = {"sub_terms":sub_terms}
-		self.save_config(dict_config)
+			return False
+	
+	def add_term(self, *, board=None, type=None, scope=None, term=None):
+		d = self.load_config()["thread_watcher"]
+		if board == None and type == None and term == None:
+			return
+		if board not in ["a","b","vt","g","trash"]:
+			return
+		if type not in ["catalog","thread"]:
+			return
+		if type == "thread" and scope != None and scope not in ["all","com","sub"]:
+			return
 
-	def watch_thread(self, dict_config, board, thread_id, last_post_id):
-		if not board in dict_config["watched"].keys():
-			dict_config["watched"][board] = {}
+		if board not in d.keys():
+			d[board] = {"catalog":{"all":[],"com":[],"sub":[]},"thread":[]}
+		if type == "catalog":
+			d[board][type][scope].append(term)
+		elif type == "thread":
+			d[board][type].append(term)
+		
+		self.save_config(d)
 
-		dict_config["watched"][board][thread_id] = last_post_id
-		self.save_config(dict_config)
+	# def add_term(self, dict_config, board, term, sub_terms=[""]):
+	# 	if not board in dict_config["terms"].keys():
+	# 		dict_config["terms"][board] = {}
 
-	def update_thread(self, board, thread_dict):
-		old = [*thread_dict.values()][0]
-		new = self.get_thread(board, [*thread_dict.keys()][0])
+	# 	if term in dict_config["terms"][board].keys():
+	# 		dict_config["terms"][board][term]["sub_terms"] = list(set(dict_config["terms"][board][term]["sub_terms"] + sub_terms))
+	# 	else:
+	# 		dict_config["terms"][board][term] = {"sub_terms":sub_terms}
+	# 	self.save_config(dict_config)
 
-		#test which is longer, higher deletion rate could result in older version being longer
-		if len(new) > len(old):
-			count = len(old)
-		else:
-			count = len(new)
+	# def watch_thread(self, dict_config, board, thread_id, last_post_id):
+	# 	if not board in dict_config["watched"].keys():
+	# 		dict_config["watched"][board] = {}
 
-		count_old = 0
-		count_new = 0
+	# 	dict_config["watched"][board][thread_id] = last_post_id
+	# 	self.save_config(dict_config)
 
-		deleted_posts = []
+	# def update_thread(self, board, thread_dict):
+	# 	old = [*thread_dict.values()][0]
+	# 	new = self.get_thread(board, [*thread_dict.keys()][0])
 
-		new_list = []
-		for i in range(len(new)):
-			new_list.append(new[i].no)
+	# 	#test which is longer, higher deletion rate could result in older version being longer
+	# 	if len(new) > len(old):
+	# 		count = len(old)
+	# 	else:
+	# 		count = len(new)
 
-		#iterate through both lists and record discrepancies
-		for x in range(count):
-			print(x)
+	# 	count_old = 0
+	# 	count_new = 0
 
-			#keep iterating while appending old deleted posts until list items match again
-			while True:
-				if str(old[count_old]) == str(new[count_new].no):
-					print("Match:",str(old[count_old]),str(new[count_new].no), len(old), len(new), count_old, count_new)
-					count_new += 1
-					count_old += 1
-					break
-				else:
-					print("NoMat:",str(old[count_old]),str(new[count_new].no), len(old), len(new), count_old, count_new)
-					deleted_posts.append(old[count_old])
-					#Checks to see if incrementating will cause out of bounds error 
-					if count_old + 1 == len(old):
-						break
-					else:
-						count_old += 1
+	# 	deleted_posts = []
+
+	# 	new_list = []
+	# 	for i in range(len(new)):
+	# 		new_list.append(new[i].no)
+
+	# 	#iterate through both lists and record discrepancies
+	# 	for x in range(count):
+	# 		print(x)
+
+	# 		#keep iterating while appending old deleted posts until list items match again
+	# 		while True:
+	# 			if str(old[count_old]) == str(new[count_new].no):
+	# 				print("Match:",str(old[count_old]),str(new[count_new].no), len(old), len(new), count_old, count_new)
+	# 				count_new += 1
+	# 				count_old += 1
+	# 				break
+	# 			else:
+	# 				print("NoMat:",str(old[count_old]),str(new[count_new].no), len(old), len(new), count_old, count_new)
+	# 				deleted_posts.append(old[count_old])
+	# 				#Checks to see if incrementating will cause out of bounds error 
+	# 				if count_old + 1 == len(old):
+	# 					break
+	# 				else:
+	# 					count_old += 1
 			
-		if len(new) > count_new:
-			new = new[count_new:]
+	# 	if len(new) > count_new:
+	# 		new = new[count_new:]
 
-		return(old, new, deleted_posts)
+	# 	return(old, new, deleted_posts)
 
-	def search_matched(self, thread_dict):
-		matched_posts = {}
-		for board in thread_dict["terms"]:
-			catalog_threads = self.get_catalog(board)
-			for thread in catalog_threads: 															#search through catalog
-				op_terms = list(thread_dict["terms"][board].keys())									#use board terms as keys (typically thread general acronym in intended use case)
-				if thread.sub != None:
-					op_matches = re.findall(r'|'.join(op_terms), thread.sub, re.IGNORECASE)
-					if op_matches:
-						matched_posts[thread.no] = {"board":board, "sub":thread.sub, "posts":[]}
-						post_terms = thread_dict["terms"][board][op_matches[0]]["sub_terms"] 		#prone to breaking if more than 1 matching term in sub
-						if post_terms[0] != "":														#Matches everything if left as a null string
-							for post in self.get_thread(board,thread.no):							#search through thread
-								if post.com != None and post.no != thread.no:
-									post_matches = re.findall(r'|'.join(post_terms), post.com, re.IGNORECASE)
-									if post_matches:
-										matched_posts[thread.no]["posts"].append({post.no:self.format_comment(post.com)})
+	# def search_matched(self, thread_dict):
+	# 	matched_posts = {}
+	# 	for board in thread_dict["terms"]:
+	# 		catalog_threads = self.get_catalog(board)
+	# 		for thread in catalog_threads: 															#search through catalog
+	# 			op_terms = list(thread_dict["terms"][board].keys())									#use board terms as keys (typically thread general acronym in intended use case)
+	# 			if thread.sub != None:
+	# 				op_matches = re.findall(r'|'.join(op_terms), thread.sub, re.IGNORECASE)
+	# 				if op_matches:
+	# 					matched_posts[thread.no] = {"board":board, "sub":thread.sub, "posts":[]}
+	# 					post_terms = thread_dict["terms"][board][op_matches[0]]["sub_terms"] 		#prone to breaking if more than 1 matching term in sub
+	# 					if post_terms[0] != "":														#Matches everything if left as a null string
+	# 						for post in self.get_thread(board,thread.no):							#search through thread
+	# 							if post.com != None and post.no != thread.no:
+	# 								post_matches = re.findall(r'|'.join(post_terms), post.com, re.IGNORECASE)
+	# 								if post_matches:
+	# 									matched_posts[thread.no]["posts"].append({post.no:self.format_comment(post.com)})
 
-		return matched_posts
+	# 	return matched_posts

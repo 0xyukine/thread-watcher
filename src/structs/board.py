@@ -50,6 +50,7 @@ class Board:
         self.watched_threads = []
 
         self.update()
+        print(f"Initialised board: {self.board} - {self.title}")
 
     def get_threads(self):
         response = requests.get(f"{BASE_URL}/{self.board}/catalog.json").json()
@@ -100,7 +101,7 @@ class Board:
 
         if type(term) == list:
             term = "|".join(term)
-        ex = re.compile(term, re.IGNORECASE)    
+        ex = re.compile(f"\s({term})|({term})(\s)", re.IGNORECASE)    
 
         if field == "all":
             for thread in self.threads:
