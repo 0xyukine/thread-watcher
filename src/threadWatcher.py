@@ -7,8 +7,14 @@ import structs.post
 import requests
 import html
 import json
+import sys
 import re
 import os
+
+from pathlib import Path
+
+FWD = Path(__file__)
+CWD = Path(sys.argv[0]).absolute()
 
 #ANSI escape codes to make terminal print more readable
 GREEN = "\u001b[32;1m"
@@ -21,14 +27,14 @@ class ThreadWatcher:
 		self.session = requests.Session()
 		self.boards = []
 
-	# def get_catalog(self, board):
-	# 	threads = []
-	# 	response = methods.getmethods.get_catalog(self.session, board).json()
-	# 	for page in response:
-	# 		for thread in page["threads"]:
-	# 			threads.append(structs.thread.Thread(thread))
+	def create_catalog(self, board):
+		for b in self.boards:
+			if b.board == board:
+				return b
 
-	# 	return threads
+		b = structs.board.Board(board)
+		self.boards.append(b)
+		return b
 
 	def update_watched(self):
 		board_dict = {}
@@ -45,14 +51,16 @@ class ThreadWatcher:
 					for thread in self.get_catalog(board).search(term,scope):
 						self.get_catalog(board).watch_thread(thread)
 
-	def get_catalog(self, board):
-		for b in self.boards:
-			if b.board == board:
-				return b
+	#Stand alone functions
 
-		b = structs.board.Board(board)
-		self.boards.append(b)
-		return b
+	def get_catalog(self, board):
+		threads = []
+		response = methods.getmethods.get_catalog(self.session, board).json()
+		for page in response:
+			for thread in page["threads"]:
+				threads.append(structs.thread.Thread(thread))
+
+		return threads
 
 	def get_thread(self, board, thread_id):
 		posts = []
@@ -85,8 +93,34 @@ class ThreadWatcher:
 	# 	self.save_config(dict_config)
 	# 	return dict_config
 
-	def save_config(self, dict_config={}):
-		with open('./config.json', 'w') as file:
+	def save_config(self, dict_config={}, filepath=CWD, force=False):
+		if filepath == CWD or Path(filepath).is_absolute():
+			path = filepath
+		else:
+			path = CWD.joinpath(filepath).resolve()
+		# elif Path(filepath).is_relative_to(CWD):
+		# 	path = CWD.joinpath(filepath).resolve()
+		# else:
+		# 	print("something went wrong")
+		# 	print(f"{type(CWD)}: {CWD}")
+
+		path = path.joinpath("config.json")
+		# path = os.path.join(CWD, 'config.json')
+		print(path)
+
+		mode = 'x'
+
+		if force == False:
+			if path.exists():
+				mode = 'w'
+				print("Config already exists, proceeding will erase old config")
+				print("Are you sure you want to continue (Y/N)")
+				r = input()
+				if r == "N":
+					return
+
+		print("Creating new config")			
+		with path.open(mode) as file:
 			json.dump({"thread_watcher":dict_config}, file, indent=4)
 
 	def load_config(self):

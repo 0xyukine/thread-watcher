@@ -101,7 +101,7 @@ class Board:
 
         if type(term) == list:
             term = "|".join(term)
-        ex = re.compile(f"\s({term})|({term})(\s)", re.IGNORECASE)    
+        ex = re.compile(f"\s({term})|({term})(\s)", re.IGNORECASE)
 
         if field == "all":
             for thread in self.threads:

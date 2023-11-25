@@ -1,3 +1,4 @@
+import re
 import requests
 import structs.post
 import structs.board
@@ -89,3 +90,25 @@ class Thread():
         self.posts_old = self.posts[:]
 
         return self.posts_new
+    
+    def search(self, term, _type="all"):
+        r = {}
+
+        if type(term) == list:
+            term = "|".join(term)
+        ex = re.compile(f"\s({term})|({term})(\s)", re.IGNORECASE)
+
+        if _type == "all":
+            posts = self.posts
+        elif _type == "new":
+            posts = self.posts_new
+        else:
+            return
+        
+        for post in posts:
+            if post.com != None and re.search(ex,post.com):
+                r[post.no] = [post,1]
+            else:
+                r[post.no] = [post,0]
+        
+        return r
