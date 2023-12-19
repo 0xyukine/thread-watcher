@@ -13,8 +13,8 @@ import os
 
 from pathlib import Path
 
-FWD = Path(__file__)
-CWD = Path(sys.argv[0]).absolute()
+FWD = Path(__file__)																									#File Working Directory. Where this file is located at runtime.
+CWD = Path(sys.argv[0]).absolute()																						#Current Working Directory. The working directory of the user when they run the file.
 
 #ANSI escape codes to make terminal print more readable
 GREEN = "\u001b[32;1m"
@@ -87,8 +87,8 @@ class ThreadWatcher:
 		return posts
 
 	def format_comment(self, comment, in_terminal=False, matched_terms=""):
-		comment = re.sub(r'<br>+', '\n', comment)                                                                   #Replace br tags with newlines to maintain original readability
-		comment = html.unescape(re.sub(r'<.*?>', '', comment))                                                      #Unescapes escaped special characters and removes HTML tags
+		comment = re.sub(r'<br>+', '\n', comment)                                                                   	#Replace br tags with newlines to maintain original readability
+		comment = html.unescape(re.sub(r'<.*?>', '', comment))                                                      	#Unescapes escaped special characters and removes HTML tags
 		if in_terminal == True:
 			comment = re.sub(r'>{1}[\S ]*', r"{}\g<0>{}".format(GREEN, RESET), comment)                                 #Matches greentext and colours it green                                                    
 			comment = re.sub(r'>>[\d]{8}', r"{}\g<0>{}".format(CYAN, RESET), comment)                                   #Matches reply and colours it cyan
